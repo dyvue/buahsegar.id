@@ -1,11 +1,12 @@
 import os
 import sys
+import uuid #UUID generator
+import pandas as pd # Impor pandas untuk tampilan table
 from termcolor import colored, cprint # Impor termcolor modules
 from dotenv import load_dotenv as LoadDotEnv # Impor env modules
 LoadDotEnv() # Load env data
+from tabulate import tabulate # Tabulate
 from config.conn import conn # Impor koneksi database file (config/conn.py)
-import pandas as pd # Impor pandas untuk tampilan table
-from tabulate import tabulate
 
 # Deklarasi variabel dari env
 APP_BRAND_NAME = os.getenv('APP_BRAND_NAME')
@@ -13,23 +14,45 @@ APP_BRAND_ADDRESS = os.getenv('APP_BRAND_ADDRESS')
 APP_BRAND_EMAIL = os.getenv('APP_BRAND_EMAIL')
 APP_BRAND_PHONE_NUMBER = os.getenv('APP_BRAND_PHONE_NUMBER')
 
-# Fungsi produk controller
-def ProductGetAll():
-	data = pd.read_sql_query("SELECT kode as KODE, nama as NAMA, harga as HARGA from product", conn)
+# Fungsi produk model
+def ProdukGetAll():
+	data = pd.read_sql_query("SELECT kode as KODE, nama as NAMA, harga as HARGA from produk", conn)
 	data.reset_index(drop=True)
 	print(tabulate(data, headers='keys', tablefmt='psql'))
-def ProductInsert(data):
-	conn.execute("INSERT INTO product (nama, harga) VALUES ('"+str(data["nama"])+"', "+str(data["harga"])+")")
+def ProdukShow(kode):
+	data = conn.execute("SELECT kode as KODE, nama as NAMA, harga as HARGA from produk WHERE kode='"+str(kode)+"'")
+	return data.fetchall()
+def ProdukInsert(data):
+	conn.execute("INSERT INTO produk (nama, harga) VALUES ('"+str(data["nama"])+"', "+str(data["harga"])+")")
 	conn.commit()
-def ProductUpdate(data):
-	conn.execute("UPDATE product SET nama='"+str(data["nama"])+"', harga="+str(data["harga"])+" WHERE kode="+str(data["kode"]))
+def ProdukUpdate(data):
+	conn.execute("UPDATE produk SET nama='"+str(data["nama"])+"', harga="+str(data["harga"])+" WHERE kode="+str(data["kode"]))
 	conn.commit()
-def ProductDelete(kode):
-	conn.execute("DELETE FROM product WHERE kode="+str(kode)+"")
+def ProdukDelete(kode):
+	conn.execute("DELETE FROM produk WHERE kode="+str(kode)+"")
+	conn.commit()
+
+# Fungsi transaksi model
+def TransaksiGetAll():
+	data = pd.read_sql_query("SELECT kode as KODE, nama_kasir as NAMA_KASIR, total as TOTAL, bayar as BAYAR, kembali as KEMBALI, tanggal as TANGGAL from transaksi", conn)
+	data.reset_index(drop=True)
+	print(tabulate(data, headers='keys', tablefmt='psql'))
+def TransaksiInsert(data):
+	generate_unik_kode = uuid.uuid1()
+	conn.execute("INSERT INTO transaksi (kode, nama_kasir, total, bayar, kembali) VALUES ('"+str(generate_unik_kode)+"', '"+str(data["nama_kasir"])+"', '"+str(data["total"])+"', '"+str(data["bayar"])+"', '"+str(data["kembali"])+"')")
+	conn.commit()
+	return str(generate_unik_kode)
+def TransaksiUpdatePembayaran(data):
+	conn.execute("UPDATE produk SET total='"+str(data["total"])+"', bayar='"+str(data["bayar"])+"', kembali='"+str(data["kembali"])+"' WHERE kode="+str(data["kode"]))
+	conn.commit()
+
+# Fungsi transaksi produk model
+def TransaksiProdukInsert(data):
+	conn.execute("INSERT INTO transaksi (transaksi_id, produk_id, jumlah, total) VALUES ('"+str(data["transaksi_id"])+"', '"+str(data["produk_id"])+"', '"+str(data["jumlah"])+"', '"+str(data["total"])+"')")
 	conn.commit()
 
 # Fungsi tampilan menu manajemen produk
-def MenuManagementProduct():
+def MenuManagementProduk():
 	print("-------------------------------------")
 	print("\t Manajemen Data Produk")
 	print("-------------------------------------")
@@ -45,34 +68,34 @@ def MenuManagementProduct():
 		try:
 			navigation = int(input("Pilih menu di atas untuk melanjutkan aksi: \n")) # Input untuk navigasi menu
 			if navigation == 1:
-				ProductGetAll()
+				ProdukGetAll()
 				ask = input("Input (y) untuk kembali, input apapun untuk keluar: \n")
 				if ask == "y":
-					MenuManagementProduct()
+					MenuManagementProduk()
 				else:
 					break
 			elif navigation == 2:
 				data = {}
 				data["nama"] = input("Masukkan nama produk: \n")
 				data["harga"] = int(input("Masukkan harga produk: \n"))
-				ProductInsert(data)
+				ProdukInsert(data)
 				print(colored("Berhasil menambah data produk", "green"))
-				MenuManagementProduct()
+				MenuManagementProduk()
 			elif navigation == 3:
-				ProductGetAll()
+				ProdukGetAll()
 				data = {}
 				data["kode"] = input("Masukkan kode produk yang ingin di edit: \n")
 				data["nama"] = input("Masukkan nama produk: \n")
 				data["harga"] = int(input("Masukkan harga produk: \n"))
-				ProductUpdate(data)
+				ProdukUpdate(data)
 				print(colored("Berhasil memperbarui data produk", "green"))
-				MenuManagementProduct()
+				MenuManagementProduk()
 			elif navigation == 4:
-				ProductGetAll()
+				ProdukGetAll()
 				kode = input("Masukkan kode produk yang ingin di hapus: \n")
-				ProductDelete(kode)
+				ProdukDelete(kode)
 				print(colored("Berhasil menghapus data produk", "green"))
-				MenuManagementProduct()
+				MenuManagementProduk()
 			elif navigation == 5:
 				MenuMain()
 			else:
@@ -81,6 +104,52 @@ def MenuManagementProduct():
 		except ValueError as err:
 			print(err)
 			continue
+
+# Fungsi tampilan transaksi produk
+def TransaksiProduk():
+	confirm_create_transaksi = input("Input (y) untuk membuat transaksi baru: ") # Input untuk generate data transaksi
+	if (confirm_create_transaksi == "y"):
+		nama_kasir = input("Masukkan nama Kasir: ")
+		data_transaksi = {}
+		data_transaksi["nama_kasir"] = nama_kasir
+		data_transaksi["total"] = 0
+		data_transaksi["bayar"] = 0
+		data_transaksi["kembali"] = 0
+		transaksi = TransaksiInsert(data_transaksi)
+		print(colored("Transaksi berhasil di buat dengan kode: " + transaksi, "green"))
+		# Perulangan while, untuk multiple produk dalam satu transaksi
+		while True:
+			try:
+					ProdukGetAll() # Tampilkan data produk
+					produk = int(input("Masukkan kode produk untuk ditambahkan ke daftar transaksi: ")) # Input untuk kode produk
+					produk_jumlah = int(input("Masukkan jumlah pembelian pada produk: ")) # Input jumlah
+					print(colored("------------------------------------------------------------------", "green"))
+					print(colored("Kode Transaksi: " + transaksi, "green"))
+					print(colored("Nama Kasir: " + nama_kasir, "green"))
+					print(colored("------------------------------------------------------------------", "green"))
+					show_produk = ProdukShow(produk)
+					print(show_produk)
+					if show_produk:
+						data_produk_transaksi = {}
+						data_produk_transaksi["transaksi_id"] = transaksi
+						data_produk_transaksi["produk_id"] = produk.kode
+						data_produk_transaksi["jumlah"] = produk_jumlah
+						data_produk_transaksi["total"] = (produk_jumlah * produk.harga)
+						print(data_produk_transaksi)
+						# TransaksiProdukInsert(data_produk_transaksi)
+						ask = input("Input (y) untuk konfirmasi produk, atau (r) untuk menambah produk lainnya: ")
+						if (ask == "y"):
+							print("selesai bro")
+						else:
+							continue
+					else:
+						print(colored("Pilih kode produk yang ada di atas!", "red"))
+			except ValueError as err:
+				print(colored(err, "red"))
+				continue
+	else:
+		print(colored("Kesalahan! anda akan dialihkan ke halaman utama", "red"))
+		MenuMain()
 
 # Fungsi tampilan menu utama
 def MenuMain():
@@ -97,10 +166,10 @@ def MenuMain():
 		try:
 			navigation = int(input("Pilih menu di atas untuk melanjutkan aksi: \n")) # Input untuk navigasi menu
 			if navigation == 1:
-				MenuManagementProduct()
+				MenuManagementProduk()
 				break
 			elif navigation == 2:
-				print("BUAT TRANSAKSI")
+				TransaksiProduk()
 				break
 			elif navigation == 3:
 				print("TAMPILKAN HISTORI TRANSAKSI")
