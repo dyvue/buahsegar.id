@@ -44,8 +44,8 @@ cursor = conn.cursor()
 cursor.execute("DROP TABLE IF EXISTS transaksi_produk")
 query = """CREATE TABLE transaksi_produk(
 	kode INTEGER PRIMARY KEY,
-	transaksi_id VARCHAR(36) NOT NULL, 
-	produk_id VARCHAR(10) NOT NULL,
+	transaksi_kode VARCHAR(36) NOT NULL, 
+	produk_kode VARCHAR(10) NOT NULL,
 	jumlah INTEGER NOT NULL,
 	total DECIMAL(10,2) NOT NULL
 )"""
