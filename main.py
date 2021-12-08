@@ -1,5 +1,6 @@
 import os
 import sys
+import datetime
 import uuid #UUID generator
 import pandas as pd # Impor pandas untuk tampilan table
 from termcolor import colored, cprint # Impor termcolor modules
@@ -16,7 +17,7 @@ APP_BRAND_PHONE_NUMBER = os.getenv('APP_BRAND_PHONE_NUMBER')
 
 # Fungsi produk model
 def ProdukGetAll():
-	data = pd.read_sql_query("SELECT kode as KODE, nama as NAMA, harga as HARGA from produk", conn)
+	data = pd.read_sql_query("SELECT kode as KODE, nama as NAMA, harga as HARGAperKG from produk", conn)
 	data.reset_index(drop=True)
 	print(tabulate(data, headers='keys', tablefmt='psql'))
 def ProdukShow(kode):
@@ -193,12 +194,13 @@ def TransaksiProduk():
 					ProdukGetAll() # Tampilkan data produk
 					produk = int(input("Masukkan kode produk untuk ditambahkan ke daftar transaksi: ")) # Input untuk kode produk
 					produk_jumlah = int(input("Masukkan jumlah pembelian pada produk: ")) # Input jumlah
+					os.system('cls')
 					print(colored("------------------------------------------------------------------", "yellow"))
 					print(colored("Kode Transaksi: " + transaksi, "yellow"))
 					print(colored("Nama Kasir: " + nama_kasir, "yellow"))
 					print(colored("------------------------------------------------------------------", "yellow"))
 					show_produk = ProdukShow(produk)
-					if show_produk[0]:
+					if show_produk and show_produk[0]:
 						data_produk_transaksi = {}
 						data_produk_transaksi["transaksi_kode"] = transaksi
 						data_produk_transaksi["produk_kode"] = show_produk[0][0]
@@ -214,31 +216,62 @@ def TransaksiProduk():
 							data_transaksi = {}
 							data_transaksi["kode"] = transaksi
 							data_transaksi["total"] = total_harga
-							data_transaksi["bayar"] = input("Pelanggan membayar uang sebanyak: ")
-							data_transaksi["kembali"] = int(int(data_transaksi["bayar"]) - total_harga)
-							TransaksiUpdatePembayaran(data_transaksi)
-							print(colored("Buah Segar ID Bill", "green"))
-							print(colored("------------------------------------------------------------------", "green"))
-							print(colored("Kode Transaksi: " + transaksi, "green"))
-							print(colored("Nama Kasir: " + nama_kasir, "green"))
-							print(colored("------------------------------------------------------------------", "green"))
+							data_transaksi["bayar"] = int(input("Pelanggan membayar uang sebanyak: "))
+							if (data_transaksi["bayar"] < total_harga):
+								os.system('cls')
+								print(colored("Maaf, Uang yang dibayar kurang!", "red"))
+								TransaksiProduk()
+							else:
+								data_transaksi["kembali"] = int(int(data_transaksi["bayar"]) - total_harga)
+								now = datetime.datetime.now()
+								TransaksiUpdatePembayaran(data_transaksi)
+								print(colored(f"""
+================================================
+              Buah Segar ID Bill
+{now.strftime ("%Y-%m-%d %H:%M:%S")}
+================================================
+{transaksi}
+Nama Kasir           :  {nama_kasir} 
+================================================""","green"))
 							for keranjang in keranjangs:
-								print(colored(str(keranjang[0]), "green"))
-								print(colored(str(keranjang[1])+"\t\t"+str(keranjang[2]), "green"))
-							print(colored("Total: " + str(total_harga), "green"))
-							print(colored("Bayar: " + str(data_transaksi["bayar"]), "green"))
-							print(colored("Kembali: " + str(data_transaksi["kembali"]), "green"))
+								print(colored(f"""
+jenis buah           : {str(keranjang[0])}
+jumlah buah          : {str(keranjang[1])} KG
+harga total          : RP  {str(keranjang[2])}""","green"))
+							print(colored(f"""================================================
+Total                : RP  {str(total_harga)}
+Bayar                : RP  {str(data_transaksi["bayar"])}
+kembali              : RP  {str(data_transaksi["kembali"])}
+Barang yang sudah dibeli tidak dapat ditukar !!! ""","green"))
+							MenuMain()
 						else:
 							continue
 					else:
+						os.system('cls')
 						print(colored("Pilih kode produk yang ada di atas!", "red"))
 			except ValueError as err:
+				os.system('cls')
 				print(colored(err, "red"))
 				continue
 	else:
 		os.system('cls')
 		print(colored("Kesalahan! anda akan dialihkan ke halaman utama", "red"))
 		MenuMain()
+
+def HistoriTransaksi():
+	TransaksiGetAll()
+	# Perulangan while, supaya pertanyaan berulang jika user salah input pilihan
+	while True:
+		try:
+			ask = input("Input (y) untuk kembali ke menu awal: ")
+			if ask == "y":
+				os.system('cls')
+				MenuMain()
+			else:
+				continue
+		except ValueError as err:
+			print(colored("Masukkan pilihan menu dengan benar!", "red"))
+
 
 # Fungsi tampilan menu utama
 def MenuMain():
@@ -253,7 +286,7 @@ def MenuMain():
 	# Perulangan while, supaya pertanyaan berulang jika user salah input pilihan
 	while True:
 		try:
-			navigation = int(input("Pilih menu di atas untuk melanjutkan aksi: \n")) # Input untuk navigasi menu
+			navigation = int(input("Pilih menu di atas untuk melanjutkan aksi: ")) # Input untuk navigasi menu
 			if navigation == 1:
 				MenuManagementProduk()
 				break
@@ -261,7 +294,7 @@ def MenuMain():
 				TransaksiProduk()
 				break
 			elif navigation == 3:
-				print("TAMPILKAN HISTORI TRANSAKSI")
+				HistoriTransaksi()
 				break
 			else:
 				print(colored("Masukkan pilihan menu dengan benar!", "red"))
