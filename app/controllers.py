@@ -24,11 +24,11 @@ def MenuManagementProduk():
 			if navigation == 1:
 				os.system('cls')
 				models.ProdukGetAll()
-				ask = input("Input (b) untuk kembali ke menu data produk, atau (q) untuk keluar: ")
-				if ask == "b" or ask == "B":
+				ask = input("Input (Y) untuk kembali ke menu data produk, atau (N) untuk keluar: ")
+				if ask == "Y" or ask == "y":
 					os.system('cls')
 					MenuManagementProduk()
-				elif ask == "q" or ask == "Q":
+				elif ask == "n" or ask == "N":
 					break
 				else:
 					os.system('cls')
@@ -48,7 +48,7 @@ def MenuManagementProduk():
 							MenuManagementProduk()
 						else:
 							os.system('cls')
-							print(colored("Harga yang dimasukkan harus berupa angka", "red"))
+							print(colored("DATA TIDAK DIKENAL", "red"))
 							MenuManagementProduk()
 					else:
 						os.system('cls')
@@ -119,7 +119,7 @@ def MenuManagementProduk():
 # Fungsi tampilan transaksi produk
 def TransaksiProduk():
 	confirm_create_transaksi = input("Input (y) untuk membuat transaksi baru: ") # Input untuk generate data transaksi
-	if (confirm_create_transaksi == "y"):
+	if (confirm_create_transaksi == "y" or ask == "y"):
 		nama_kasir = input("Masukkan nama Kasir: ")
 		data_transaksi = {}
 		data_transaksi["nama_kasir"] = nama_kasir
@@ -149,7 +149,7 @@ def TransaksiProduk():
 						models.TransaksiProdukInsert(data_produk_transaksi)
 						keranjangs = models.TransaksiProdukGetAll(transaksi)
 						ask = input("Input (y) untuk konfirmasi produk, atau (r) untuk menambah produk lainnya: ")
-						if (ask == "y"):
+						if (ask == "y" or ask == "Y"):
 							total_harga = 0
 							for keranjang in keranjangs:
 								total_harga += keranjang[2]
