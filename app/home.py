@@ -18,6 +18,7 @@ def MenuMain():
 	print("1. Manajemen data produk")
 	print("2. Buat transaksi pelanggan")
 	print("3. Lihat semua histori transaksi")
+	print("4. EXIT program")
 	print("==============================================")
 
 	# Perulangan while, supaya pertanyaan berulang jika user salah input pilihan
@@ -25,13 +26,19 @@ def MenuMain():
 		try:
 			navigation = int(input("Pilih menu di atas untuk melanjutkan aksi: ")) # Input untuk navigasi menu
 			if navigation == 1:
+				os.system('cls')
 				controllers.MenuManagementProduk()
 				break
 			elif navigation == 2:
+				os.system('cls')
 				controllers.TransaksiProduk()
 				break
 			elif navigation == 3:
+				os.system('cls')
 				controllers.HistoriTransaksi()
+				break
+			elif navigation == 4:
+				os.close
 				break
 			else:
 				print(colored("Masukkan pilihan menu dengan benar!", "red"))
