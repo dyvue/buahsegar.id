@@ -68,7 +68,7 @@ def MenuManagementProduk():
 				if data["kode"] != "" and data["nama"] != "" and data["harga"] != "":
 					if not data["nama"].isnumeric():
 						if data["harga"].isnumeric():
-							if (models.ProdukUpdate(data)):
+							if models.ProdukUpdate(data):
 								os.system('cls')
 								print(colored("Berhasil memperbarui data produk", "green"))
 								MenuManagementProduk()
@@ -119,7 +119,7 @@ def MenuManagementProduk():
 # Fungsi tampilan transaksi produk
 def TransaksiProduk():
 	confirm_create_transaksi = input("Input (y) untuk membuat transaksi baru: ") # Input untuk generate data transaksi
-	if (confirm_create_transaksi == "y" or ask == "y"):
+	if (confirm_create_transaksi == "y" or confirm_create_transaksi == "Y"):
 		nama_kasir = input("Masukkan nama Kasir: ")
 		data_transaksi = {}
 		data_transaksi["nama_kasir"] = nama_kasir
@@ -135,10 +135,10 @@ def TransaksiProduk():
 					produk = int(input("Masukkan kode produk untuk ditambahkan ke daftar transaksi: ")) # Input untuk kode produk
 					produk_jumlah = int(input("Masukkan jumlah pembelian pada produk: ")) # Input jumlah
 					os.system('cls')
-					print(colored("------------------------------------------------------------------", "yellow"))
-					print(colored("Kode Transaksi: " + transaksi, "yellow"))
-					print(colored("Nama Kasir: " + nama_kasir, "yellow"))
-					print(colored("------------------------------------------------------------------", "yellow"))
+					print(colored("------------------------------------------------------------------", "green"))
+					print(colored("Kode Transaksi: " + transaksi, "green"))
+					print(colored("Nama Kasir: " + nama_kasir, "green"))
+					print(colored("------------------------------------------------------------------", "green"))
 					show_produk = models.ProdukShow(produk)
 					if show_produk and show_produk[0]:
 						data_produk_transaksi = {}

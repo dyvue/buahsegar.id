@@ -18,6 +18,7 @@ def ProdukUpdate(data):
 	try:
 		conn.execute("UPDATE produk SET nama='"+str(data["nama"])+"', harga="+str(data["harga"])+" WHERE kode="+str(data["kode"]))
 		conn.commit()
+		return True
 	except sqlite3.Error as error:
 		print("Error while connecting to sqlite", error)
 def ProdukDelete(kode):
